@@ -1,0 +1,123 @@
+.root-jsonedit
+    color: black
+    font-family: "Lucida Console", Monaco, monospace
+    padding: 20px
+    background-color: #FFD
+    border: 1px solid #333
+    border-radius: 5px
+    .inline-brace
+        display: inline-block
+    & > ul[data-type] > li
+        margin-left: 45px
+    .collapser
+        position: absolute
+        top: 5px
+        left: 0px
+        width: 8px
+        height: 8px
+        border: 1px solid #666
+        border-radius: 2px
+        background-color: #fff
+        display: none
+        cursor: pointer
+        &::after
+            top: -4px
+            left: 0px
+            font-size: 12px
+            z-index: 1
+            position: absolute
+
+    [data-collapsed="false"]
+        &.complex.array
+            & > .json-value::before
+                content: "["
+                display: block
+            &::after
+                content: "],"
+                display: block
+            &.last::after
+                content: "]"
+                display: block
+        &.complex.object
+            &:not(.in-array)::after
+                content: "},"
+                display: block
+            & > .json-value::before
+                content: "{"
+                display: block
+            &.last:not(.in-array)::after
+                content: "}"
+                display: block
+            &.in-array > .json-value::after
+                content: "},"
+                display: block
+            &.last.in-array > .json-value::after
+                content: "}"
+                display: block
+        .collapser::after
+            content: "-"
+    [data-collapsed="true"]
+        & > .json-value > li
+            display: none
+        &.complex.array
+            & > .json-value::before
+                content: "[],"
+                display: block
+            &.last > .json-value::before
+                content: "[]"
+                display: block
+        &.complex.object
+            & > .json-value::before
+                content: "{},"
+                display: block
+            &.last > .json-value::before
+                content: "{}"
+                display: block
+        .collapser::after
+            content: "+"
+    ul
+        list-style-type: none
+        margin-left: 0
+        padding: 0
+        li
+            margin-left: 45px
+            .json-key-container
+                display: inline-flex
+                vertical-align: top
+                flex-direction: column
+                justify-content: space-between
+                align-items: stretch
+            .json-value
+                padding-left: 10px
+                position: relative
+                &:hover > .collapser
+                    display: block
+                .act-value[contenteditable="true"]:focus
+                    outline: 2px dashed lightblue
+                    border-radius: 2px
+                    
+            span
+                display: inline
+                vertical-align: top
+            .json-key-container + ul, span + ul
+                display: inline-block
+                vertical-align: top
+            .json-key
+                color: crimson
+                cursor: default
+            &[data-type="boolean"]
+                .json-value
+                    .act-value
+                        color: orange
+            &[data-type="number"]
+                .json-value
+                    .act-value
+                        color: blue
+            &[data-type="string"]
+                .json-value
+                    .act-value
+                        color: green
+                        &::before
+                            content: '"'
+                        &::after
+                            content: '"'

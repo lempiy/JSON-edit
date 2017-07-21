@@ -1,0 +1,192 @@
+/** postcss-bem-linter: define main-component; weak */
+.root-jsonedit {
+  color: black;
+  font-family: "Lucida Console", Monaco, monospace;
+  padding: 20px;
+  background-color: #FFD;
+  border: 1px solid #333;
+  border-radius: 5px;
+}
+
+.root-jsonedit .inline-brace {
+  display: inline-block;
+}
+
+.root-jsonedit > ul[data-type] > li {
+  margin-left: 45px;
+}
+
+.root-jsonedit .collapser {
+  position: absolute;
+  top: 5px;
+  left: 0px;
+  width: 8px;
+  height: 8px;
+  border: 1px solid #666;
+  border-radius: 2px;
+  background-color: #fff;
+  display: none;
+  cursor: pointer;
+}
+
+.root-jsonedit .collapser::after {
+  top: -4px;
+  left: 0px;
+  font-size: 12px;
+  z-index: 1;
+  position: absolute;
+}
+
+.root-jsonedit [data-collapsed="false"].complex.array > .json-value::before {
+  content: "[";
+  display: block;
+}
+
+.root-jsonedit [data-collapsed="false"].complex.array::after {
+  content: "],";
+  display: block;
+}
+
+.root-jsonedit [data-collapsed="false"].complex.array.last::after {
+  content: "]";
+  display: block;
+}
+
+.root-jsonedit [data-collapsed="false"].complex.object:not(.in-array)::after {
+  content: "},";
+  display: block;
+}
+
+.root-jsonedit [data-collapsed="false"].complex.object > .json-value::before {
+  content: "{";
+  display: block;
+}
+
+.root-jsonedit [data-collapsed="false"].complex.object.last:not(.in-array)::after {
+  content: "}";
+  display: block;
+}
+
+.root-jsonedit [data-collapsed="false"].complex.object.in-array > .json-value::after {
+  content: "},";
+  display: block;
+}
+
+.root-jsonedit [data-collapsed="false"].complex.object.last.in-array > .json-value::after {
+  content: "}";
+  display: block;
+}
+
+.root-jsonedit [data-collapsed="false"] .collapser::after {
+  content: "-";
+}
+
+.root-jsonedit [data-collapsed="true"] > .json-value > li {
+  display: none;
+}
+
+.root-jsonedit [data-collapsed="true"].complex.array > .json-value::before {
+  content: "[],";
+  display: block;
+}
+
+.root-jsonedit [data-collapsed="true"].complex.array.last > .json-value::before {
+  content: "[]";
+  display: block;
+}
+
+.root-jsonedit [data-collapsed="true"].complex.object > .json-value::before {
+  content: "{},";
+  display: block;
+}
+
+.root-jsonedit [data-collapsed="true"].complex.object.last > .json-value::before {
+  content: "{}";
+  display: block;
+}
+
+.root-jsonedit [data-collapsed="true"] .collapser::after {
+  content: "+";
+}
+
+.root-jsonedit ul {
+  list-style-type: none;
+  margin-left: 0;
+  padding: 0;
+}
+
+.root-jsonedit ul li {
+  margin-left: 45px;
+}
+
+.root-jsonedit ul li .json-key-container {
+  display: -ms-inline-flexbox;
+  display: inline-flex;
+  vertical-align: top;
+  -ms-flex-direction: column;
+      flex-direction: column;
+  -ms-flex-pack: justify;
+      justify-content: space-between;
+  -ms-flex-align: stretch;
+      align-items: stretch;
+}
+
+.root-jsonedit ul li .json-value {
+  padding-left: 10px;
+  position: relative;
+}
+
+.root-jsonedit ul li .json-value:hover > .collapser {
+  display: block;
+}
+
+.root-jsonedit ul li .json-value .act-value[contenteditable="true"]:focus {
+  outline: 2px dashed lightblue;
+  border-radius: 2px;
+}
+
+.root-jsonedit ul li span {
+  display: inline;
+  vertical-align: top;
+}
+
+.root-jsonedit ul li .json-key-container + ul, .root-jsonedit ul li span + ul {
+  display: inline-block;
+  vertical-align: top;
+}
+
+.root-jsonedit ul li .json-key {
+  color: crimson;
+  cursor: default;
+}
+
+.root-jsonedit ul li[data-type="boolean"] .json-value .act-value {
+  color: orange;
+}
+
+.root-jsonedit ul li[data-type="number"] .json-value .act-value {
+  color: blue;
+}
+
+.root-jsonedit ul li[data-type="string"] .json-value .act-value {
+  color: green;
+}
+
+.root-jsonedit ul li[data-type="string"] .json-value .act-value::before {
+  content: '"';
+}
+
+.root-jsonedit ul li[data-type="string"] .json-value .act-value::after {
+  content: '"';
+}
+
+.main-component__title {
+  color: #042;
+}
+
+/** postcss-bem-linter: define utilities */
+.u-ellipsis {
+  color: #042;
+}
+
+/*# sourceMappingURL=app.css.map*/
