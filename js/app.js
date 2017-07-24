@@ -48,7 +48,7 @@
 	
 	var _jsoneditorJsoneditor = __webpack_require__(1);
 	
-	__webpack_require__(3);
+	__webpack_require__(4);
 	
 	var appContainer = document.querySelector('#app');
 	
@@ -270,6 +270,8 @@
 	
 	var _node = __webpack_require__(2);
 	
+	var _adder = __webpack_require__(3);
+	
 	var editNode = undefined;
 	var editEl = undefined;
 	
@@ -312,17 +314,36 @@
 	
 	            this.root = document.createElement("div");
 	            this.root.classList.add('root-jsonedit');
+	            this._createRootNode();
+	            this._createRootTitle();
+	            this.mountElement.appendChild(this.root);
+	            this.createMap();
+	            this.attachEvents();
+	            this.adder = new _adder.Adder();
+	            console.dir(this.rootNode);
+	            console.dir(this.elementsMap);
+	        }
+	    }, {
+	        key: '_createRootNode',
+	        value: function _createRootNode() {
 	            this.rootNode = new _node.Node(this.source, {
 	                type: Array.isArray(this.source) ? "array" : "object",
 	                parent: null,
 	                noComma: true
 	            });
 	            this.root.appendChild(this.rootNode.element);
-	            this.mountElement.appendChild(this.root);
-	            this.createMap();
-	            this.attachEvents();
-	            console.dir(this.rootNode);
-	            console.dir(this.elementsMap);
+	        }
+	    }, {
+	        key: '_createRootTitle',
+	        value: function _createRootTitle() {
+	            this.root.setAttribute("data-collapsed", false);
+	            var collapser = document.createElement("div");
+	            collapser.classList.add('collapser', 'root-collapse');
+	            this.root.appendChild(collapser);
+	            var title = document.createElement('div');
+	            title.classList.add('title-root');
+	            title.textContent = '' + (this.rootNode.type === 'array' ? '[]' : '{}');
+	            this.root.appendChild(title);
 	        }
 	    }, {
 	        key: 'createMap',
@@ -349,6 +370,12 @@
 	                if (event.target.classList.contains("collapser")) {
 	                    _this2.collapseNode(event.target);
 	                }
+	                if (event.target.classList.contains("remove-value")) {
+	                    _this2.deleteArrayValue(event.target);
+	                }
+	                if (event.target.classList.contains("creator")) {
+	                    _this2.showCreator(event.target);
+	                }
 	            });
 	            this.root.addEventListener('focus', function (event) {
 	                if (event.target.classList.contains("act-value")) {
@@ -360,6 +387,13 @@
 	                    _this2.onFinishEditValue(event.target);
 	                }
 	            }, true);
+	        }
+	    }, {
+	        key: 'showCreator',
+	        value: function showCreator(target) {
+	            var valueEl = target.parentNode;
+	            var node = this.elementsMap.get(valueEl);
+	            this.adder.show(node);
 	        }
 	    }, {
 	        key: 'onStartEditValue',
@@ -395,15 +429,55 @@
 	                    editNode.data[editNode.key] = editEl.textContent;
 	                    break;
 	            }
-	            console.dir(this.source);
 	            editEl, editNode = null, null;
 	        }
 	    }, {
 	        key: 'collapseNode',
 	        value: function collapseNode(target) {
+	            if (target.classList.contains('root-collapse')) {
+	                var collapsed = this.root.getAttribute('data-collapsed') === 'false' ? false : true;
+	                this.root.setAttribute('data-collapsed', !collapsed);
+	                return;
+	            }
 	            var valueEl = target.parentNode;
 	            var node = this.elementsMap.get(valueEl);
 	            node.collapsed = !node.collapsed;
+	        }
+	    }, {
+	        key: 'deleteArrayValue',
+	        value: function deleteArrayValue(target) {
+	            var valueEl = target.parentNode;
+	            var node = this.elementsMap.get(valueEl);
+	
+	            node.data.splice(+node.key, 1);
+	            this.elementsMap['delete'](valueEl);
+	            var parent = node.parent;
+	
+	            if (target.classList.contains("complex-value")) {
+	                this.updateArrayKeys(parent, node);
+	                var arrayElement = JsonEditor.closestWithClass(valueEl, 'in-array');
+	                arrayElement.parentNode.removeChild(arrayElement);
+	                valueEl.parentNode.removeChild(valueEl);
+	
+	                return;
+	            }
+	            this.updateArrayKeys(parent, node);
+	            valueEl.parentNode.removeChild(valueEl);
+	        }
+	    }, {
+	        key: 'updateArrayKeys',
+	        value: function updateArrayKeys(arrayNode, node) {
+	            arrayNode.children.splice(arrayNode.children.indexOf(node), 1);
+	
+	            arrayNode.children.forEach(function (n, i) {
+	                if (n instanceof _node.Node) {
+	                    n.element.previousSibling.textContent = i + ":";
+	                } else {
+	                    n.element.querySelector(".json-key").textContent = i + ":";
+	                }
+	
+	                n.key = i;
+	            });
 	        }
 	    }], [{
 	        key: 'getValueElement',
@@ -419,10 +493,26 @@
 	        }
 	    }, {
 	        key: 'closestWithAttr',
-	        value: function closestWithAttr(element, attr) {
+	        value: function closestWithAttr(element, attr, value) {
 	            var current = element;
 	            while (current.parentNode) {
 	                if (current.getAttribute(attr)) {
+	                    if (value && current.getAttribute(attr) !== value) {
+	                        current = current.parentNode;
+	                        continue;
+	                    }
+	                    return current;
+	                }
+	                current = current.parentNode;
+	            }
+	            return null;
+	        }
+	    }, {
+	        key: 'closestWithClass',
+	        value: function closestWithClass(element, _class) {
+	            var current = element;
+	            while (current.parentNode) {
+	                if (current.classList.contains(_class)) {
 	                    return current;
 	                }
 	                current = current.parentNode;
@@ -458,6 +548,7 @@
 	        this.parent = config.parent || null;
 	        this.children = [];
 	        this.type = config.type;
+	        this.data = config.data || null;
 	        this.key = config.key;
 	        this.element = this._createNode(value, config.noComma, config.noClosing);
 	        this.collapsed = false;
@@ -469,11 +560,10 @@
 	            var _this = this;
 	
 	            var node = document.createElement("ul");
-	            var braces = Node._getCorrectBraces(obj, noComma);
 	
-	            if (!noClosing) {
-	                node.appendChild(braces[0]);
-	            }
+	            node.classList.add('json-value');
+	
+	            var braces = Node._getCorrectBraces(obj, noComma);
 	
 	            var values = [];
 	
@@ -485,9 +575,6 @@
 	            values.forEach(function (el) {
 	                node.appendChild(el);
 	            });
-	            if (!noClosing) {
-	                node.appendChild(braces[1]);
-	            }
 	
 	            return node;
 	        }
@@ -503,7 +590,7 @@
 	                    return this.type === 'object' ? this._createSimpleValue(key, value, this.source, type, isLast) : this._createSimpleValueArray(key, value, this.source, type, isLast);
 	                case "object":
 	                case "array":
-	                    return this.type === 'object' ? this._createComplexValue(key, value, type, isLast) : this._createComplexValueArray(key, value, type, isLast);
+	                    return this.type === 'object' ? this._createComplexValue(key, value, type, isLast) : this._createComplexValueArray(key, value, this.source, type, isLast);
 	            }
 	        }
 	    }, {
@@ -537,18 +624,17 @@
 	                key: key
 	            });
 	            this.children.push(val);
-	            val.element.classList.add('json-value');
+	
 	            el.appendChild(val.element);
 	
-	            var collapser = document.createElement("div");
-	            collapser.classList.add('collapser');
-	            val.element.appendChild(collapser);
+	            this._addCollapser(val.element);
+	            this._addCreator(val.element);
 	
 	            return el;
 	        }
 	    }, {
 	        key: '_createComplexValueArray',
-	        value: function _createComplexValueArray(key, value, type, isLast) {
+	        value: function _createComplexValueArray(key, value, source, type, isLast) {
 	            var el = document.createElement("li");
 	            el.classList.add("complex", "in-array");
 	
@@ -563,10 +649,16 @@
 	                el.classList.add("last");
 	            }
 	            el.setAttribute("data-collapsed", false);
+	            var span = document.createElement("span");
+	            span.classList.add('json-key');
+	            span.textContent = key + ":";
+	
+	            el.appendChild(span);
 	
 	            var val = new Node(value, {
 	                type: type,
 	                parent: this,
+	                data: source,
 	                noComma: isLast,
 	                noClosing: true,
 	                key: key
@@ -576,18 +668,44 @@
 	            val.element.classList.add('json-value');
 	            el.appendChild(val.element);
 	
+	            this._addCollapser(val.element);
+	            if (this.parent) {
+	                this._addDeleter(val.element);
+	            }
+	            return el;
+	        }
+	    }, {
+	        key: '_addDeleter',
+	        value: function _addDeleter(element) {
+	            '<div class="remove-value" title="Delete">&#9932;</div>';
+	            var deleter = document.createElement("div");
+	            deleter.classList.add('remove-value', 'complex-value');
+	            deleter.innerHTML = '&#9932;';
+	            deleter.title = 'Delete';
+	            element.appendChild(deleter);
+	        }
+	    }, {
+	        key: '_addCollapser',
+	        value: function _addCollapser(element) {
 	            var collapser = document.createElement("div");
 	            collapser.classList.add('collapser');
-	            val.element.appendChild(collapser);
-	
-	            return el;
+	            element.appendChild(collapser);
+	        }
+	    }, {
+	        key: '_addCreator',
+	        value: function _addCreator(element) {
+	            var creator = document.createElement("div");
+	            creator.classList.add('creator');
+	            creator.textContent = "+Add";
+	            creator.title = "Add";
+	            element.appendChild(creator);
 	        }
 	    }, {
 	        key: '_createSimpleValue',
 	        value: function _createSimpleValue(key, value, source, type, isLast) {
 	            var el = document.createElement("li");
 	
-	            el.innerHTML = '<span spellcheck="false" class="json-key">' + key + ':</span><span class="json-value">\n                <span spellcheck="false" contenteditable="true" class="act-value">' + value + '</span>' + (isLast ? '' : ',') + '\n            </span>';
+	            el.innerHTML = '<span spellcheck="false" class="json-key">' + key + ':</span><span class="json-value">\n                <span spellcheck="false" contenteditable="true" class="act-value">' + value + '</span>\n            </span>';
 	
 	            el.setAttribute('data-type', type);
 	            this.children.push({
@@ -605,7 +723,7 @@
 	        value: function _createSimpleValueArray(key, value, source, type, isLast) {
 	            var el = document.createElement("li");
 	
-	            el.innerHTML = '<span class="json-value">\n                <span contenteditable="true" class="act-value">' + value + '</span>' + (isLast ? '' : ',') + '\n            </span>';
+	            el.innerHTML = '<span spellcheck="false" class="json-key">' + key + ':</span><span class="json-value">\n                <span contenteditable="true" class="act-value">' + value + '</span>\n            </span>\n            <div class="remove-value" title="Delete">&#9932;</div>';
 	
 	            el.setAttribute('data-type', type);
 	            this.children.push({
@@ -616,6 +734,7 @@
 	                parent: this,
 	                children: null
 	            });
+	
 	            return el;
 	        }
 	    }, {
@@ -677,12 +796,12 @@
 	                first = document.createElement('div');
 	                first.textContent = '[';
 	                second = document.createElement('div');
-	                second.textContent = ']' + (noComma ? '' : ',');
+	                second.textContent = ']';
 	            } else {
 	                first = document.createElement('div');
 	                first.textContent = '{';
 	                second = document.createElement('div');
-	                second.textContent = '}' + (noComma ? '' : ',');
+	                second.textContent = '}';
 	            }
 	
 	            if (!Object.keys(obj).length) {
@@ -700,6 +819,112 @@
 
 /***/ }),
 /* 3 */
+/***/ (function(module, exports) {
+
+	"use strict";
+	
+	Object.defineProperty(exports, "__esModule", {
+	    value: true
+	});
+	
+	var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+	
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+	
+	var Adder = (function () {
+	    function Adder() {
+	        _classCallCheck(this, Adder);
+	
+	        this.optionsStruct = {
+	            number: "number",
+	            string: "string",
+	            boolean: "boolean",
+	            array: "array",
+	            object: "object"
+	        };
+	        this._createPannel();
+	        this._createHidder();
+	    }
+	
+	    _createClass(Adder, [{
+	        key: "_createHidder",
+	        value: function _createHidder() {
+	            this._hidder = document.createElement("div");
+	            this._hidder.classList.add("hidden");
+	            this._hidder.appendChild(this.hostElement);
+	            document.body.appendChild(this._hidder);
+	        }
+	    }, {
+	        key: "show",
+	        value: function show(node) {
+	            this.currentNode = node;
+	            node.element.appendChild(this.hostElement);
+	        }
+	    }, {
+	        key: "hide",
+	        value: function hide() {
+	            this.currentNode = null;
+	            this._hidder.appendChild(this.hostElement);
+	        }
+	    }, {
+	        key: "_createPannel",
+	        value: function _createPannel() {
+	            var _this = this;
+	
+	            this.hostElement = document.createElement("li");
+	            this.hostElement.classList.add("adder-host");
+	            this.hostElement.setAttribute("data-type", "");
+	            //create key
+	            this.keyElement = document.createElement("span");
+	            this.keyElement.classList.add("json-key");
+	            this.keyElement.setAttribute("spellcheck", false);
+	            this.keyElement.textContent = "new:";
+	            this.hostElement.appendChild(this.keyElement);
+	
+	            //create body
+	            this.bodyElement = document.createElement("div");
+	            this.bodyElement.classList.add("adder-body");
+	            this.hostElement.appendChild(this.bodyElement);
+	
+	            //create input-container
+	            this.inputContainer = document.createElement("div");
+	            this.inputContainer.classList.add("input-container");
+	            this.bodyElement.appendChild(this.inputContainer);
+	
+	            //create select-type
+	            this.selectType = document.createElement("div");
+	            this.selectType.classList.add("select-type");
+	            this.bodyElement.appendChild(this.selectType);
+	
+	            //create apply
+	            this.applyElement = document.createElement("div");
+	            this.applyElement.classList.add("apply");
+	            this.bodyElement.appendChild(this.applyElement);
+	
+	            //create apply-button
+	            this.applyButton = document.createElement("button");
+	            this.applyButton.textContent = "Apply";
+	            this.applyElement.appendChild(this.applyButton);
+	
+	            //create select
+	            this.selectTypeInput = document.createElement('select');
+	            Object.keys(this.optionsStruct).map(function (option, i) {
+	                var opt = document.createElement("option");
+	                opt.value = option;
+	                opt.textContent = option;
+	                _this.selectTypeInput.appendChild(opt);
+	            });
+	            this.selectType.appendChild(this.selectTypeInput);
+	        }
+	    }]);
+	
+	    return Adder;
+	})();
+
+	exports.Adder = Adder;
+
+/***/ }),
+/* 4 */
 /***/ (function(module, exports) {
 
 	// removed by extract-text-webpack-plugin

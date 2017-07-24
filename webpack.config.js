@@ -21,14 +21,14 @@ module.exports = {
     new ExtractTextPlugin('css/app.css'),
 
     // Stylelint plugin
-    new styleLintPlugin({
-      configFile: '.stylelintrc',
-      context: '',
-      files: '**/*.sass',
-      syntax: 'sass',
-      failOnError: false,
-      quiet: false
-    })
+    // new styleLintPlugin({
+    //   configFile: '.stylelintrc',
+    //   context: '',
+    //   files: '**/*.sass',
+    //   syntax: 'sass',
+    //   failOnError: false,
+    //   quiet: false
+    // })
   ],
 
   module: {
