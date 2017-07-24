@@ -1,14 +1,28 @@
+.hidden
+    display: none
 .root-jsonedit
     color: black
     font-family: "Lucida Console", Monaco, monospace
     padding: 20px
-    background-color: #FFD
+    background-color: #FFE
     border: 1px solid #333
     border-radius: 5px
+    position: relative
+    overflow-x: scroll
     .inline-brace
         display: inline-block
     & > ul[data-type] > li
         margin-left: 45px
+    .creator
+        position: absolute
+        top: 3px
+        left: 35px
+        cursor: pointer
+        font-size: 12px
+        color: #999
+        display: none
+        &:hover
+            color: #05d00e
     .collapser
         position: absolute
         top: 5px
@@ -18,69 +32,83 @@
         border: 1px solid #666
         border-radius: 2px
         background-color: #fff
-        display: none
         cursor: pointer
         &::after
-            top: -4px
-            left: 0px
+            top: 50%
+            left: 50%
+            transform: translate(-50%, -50%)
             font-size: 12px
             z-index: 1
             position: absolute
-
-    [data-collapsed="false"]
-        &.complex.array
-            & > .json-value::before
-                content: "["
-                display: block
-            &::after
-                content: "],"
-                display: block
-            &.last::after
-                content: "]"
-                display: block
-        &.complex.object
-            &:not(.in-array)::after
-                content: "},"
-                display: block
-            & > .json-value::before
-                content: "{"
-                display: block
-            &.last:not(.in-array)::after
-                content: "}"
-                display: block
-            &.in-array > .json-value::after
-                content: "},"
-                display: block
-            &.last.in-array > .json-value::after
-                content: "}"
-                display: block
+    & >  .collapser
+        top: 22px
+        left: 10px
+    & > .title-root
+        position: absolute
+        top: 17px
+        left: 20px
+    [data-collapsed="false"], &[data-collapsed="false"]
         .collapser::after
             content: "-"
-    [data-collapsed="true"]
+    [data-collapsed="true"],&[data-collapsed="true"]
         & > .json-value > li
             display: none
+        .collapser::after
+            content: "+"
+    [data-collapsed]
         &.complex.array
             & > .json-value::before
-                content: "[],"
-                display: block
-            &.last > .json-value::before
                 content: "[]"
                 display: block
         &.complex.object
             & > .json-value::before
-                content: "{},"
-                display: block
-            &.last > .json-value::before
                 content: "{}"
                 display: block
-        .collapser::after
-            content: "+"
     ul
         list-style-type: none
         margin-left: 0
         padding: 0
+        position: relative
+        // &.json-value::after
+        //     content: ''
+        //     width: 1px
+        //     height: calc(100% - 24px)
+        //     display: block
+        //     position: absolute
+        //     top: 15px
+        //     left: 5px
+        //     border-left: 1px dotted #444
+        li[data-type]::after, li.complex::after
+            content: ''
+            width: 45px
+            height: 1px
+            display: block
+            position: absolute
+            top: 9px
+            left: -50px
+            border-bottom: 1px dotted #444
+        li[data-type]::before, li.complex::before
+            content: ''
+            width: 1px
+            height: 100%
+            display: block
+            position: absolute
+            top: 10px
+            left: -50px
+            border-left: 1px dotted #444
+        li[data-type]:last-of-type::before, li.complex:last-of-type::before
+            border-left: none
+        li[data-type]:first-of-type::before, li.complex:first-of-type::before
+            top: 0px
+            height: calc(100% + 10px)
+        li[data-type]:only-of-type::before, li.complex:only-of-type::before
+            top: 0px
+            height: 10px
+            border-left: 1px dotted #444
         li
             margin-left: 45px
+            position: relative
+            display: flex
             .json-key-container
                 display: inline-flex
                 vertical-align: top
@@ -92,10 +120,28 @@
                 position: relative
                 &:hover > .collapser
                     display: block
+                &:hover > .creator
+                    display: inline
                 .act-value[contenteditable="true"]:focus
                     outline: 2px dashed lightblue
                     border-radius: 2px
-                    
+                li
+                    .json-value, li[data-type]
+                        position: relative
+                        & > .remove-value
+                            display: inline
+                            display: none
+                            opacity: 0.4
+                            &:hover
+                                opacity: 1
+                            &.complex-value
+                                position: absolute
+                                top: 0
+                                right: 0
+                        &:hover
+                            & > .remove-value
+                                display: block
+                                cursor: pointer
             span
                 display: inline
                 vertical-align: top
@@ -121,3 +167,20 @@
                             content: '"'
                         &::after
                             content: '"'
+    
+    .adder-host
+        display: flex
+        width: 400px
+        height: 25px
+        background-color: #fef
+        .adder-body
+            display: inline-flex
+            width: 100%
+            .input-container, .select-type, .apply
+                display: flex
+                align-items: center
+                height: 100%
+            .input-container
+                width: 50%
+            .select-type
+                width: 30%

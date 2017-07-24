@@ -13,6 +13,7 @@ export class Node {
         this.parent = config.parent || null;
         this.children = [];
         this.type = config.type;
+        this.data = config.data || null;
         this.key = config.key;
         this.element = this._createNode(value, config.noComma, config.noClosing);
         this.collapsed = false;
@@ -20,11 +21,10 @@ export class Node {
 
     _createNode(obj, noComma, noClosing) {
         const node = document.createElement("ul");
-        const braces = Node._getCorrectBraces(obj, noComma);
 
-        if (!noClosing) {
-            node.appendChild(braces[0])
-        }
+        node.classList.add('json-value')
+
+        const braces = Node._getCorrectBraces(obj, noComma);
 
         let values = [];
 
@@ -36,9 +36,6 @@ export class Node {
         values.forEach(el => {
             node.appendChild(el);
         })
-        if (!noClosing) {
-            node.appendChild(braces[1])
-        }
 
         return node;
     }
@@ -90,7 +87,7 @@ export class Node {
             case "array":
                 return this.type === 'object' ? 
                     this._createComplexValue(key, value, type, isLast) :
-                    this._createComplexValueArray(key, value, type, isLast);
+                    this._createComplexValueArray(key, value, this.source, type, isLast);
         }
     }
 
@@ -123,17 +120,16 @@ export class Node {
             key: key
         });
         this.children.push(val);
-        val.element.classList.add('json-value')
-        el.appendChild(val.element)
         
-        let collapser = document.createElement("div");
-        collapser.classList.add('collapser');
-        val.element.appendChild(collapser);
+        el.appendChild(val.element);
+        
+        this._addCollapser(val.element);
+        this._addCreator(val.element)
 
         return el;
     }
 
-    _createComplexValueArray(key, value, type, isLast) {
+    _createComplexValueArray(key, value, source, type, isLast) {
         const el = document.createElement("li");
         el.classList.add("complex", "in-array");
 
@@ -148,24 +144,53 @@ export class Node {
             el.classList.add("last");
         }
         el.setAttribute("data-collapsed", false);
+        const span = document.createElement("span");
+        span.classList.add('json-key');
+        span.textContent = key + ":";
+
+        el.appendChild(span)
 
         const val = new Node(value, {
             type: type, 
             parent: this, 
+            data: source,
             noComma: isLast,
             noClosing: true,
             key: key
         });
 
         this.children.push(val);
-        val.element.classList.add('json-value')
-        el.appendChild(val.element)
+        val.element.classList.add('json-value');
+        el.appendChild(val.element);
+        
+        this._addCollapser(val.element);
+        if (this.parent) {
+            this._addDeleter(val.element)
+        } 
+        return el;
+    }
 
+    _addDeleter(element) {
+        `<div class="remove-value" title="Delete">&#9932;</div>`
+        const deleter = document.createElement("div");
+        deleter.classList.add('remove-value', 'complex-value');
+        deleter.innerHTML = '&#9932;';
+        deleter.title = 'Delete';
+        element.appendChild(deleter);
+    }
+
+    _addCollapser(element) {
         let collapser = document.createElement("div");
         collapser.classList.add('collapser');
-        val.element.appendChild(collapser);
+        element.appendChild(collapser);
+    }
 
-        return el;
+    _addCreator(element) {
+        let creator = document.createElement("div");
+        creator.classList.add('creator');
+        creator.textContent = "+Add";
+        creator.title = "Add";
+        element.appendChild(creator);
     }
 
     _createSimpleValue(key, value, source, type, isLast) {
@@ -173,7 +198,7 @@ export class Node {
 
         el.innerHTML = 
             `<span spellcheck="false" class="json-key">${key}:</span><span class="json-value">
-                <span spellcheck="false" contenteditable="true" class="act-value">${value}</span>${isLast ? '' : ','}
+                <span spellcheck="false" contenteditable="true" class="act-value">${value}</span>
             </span>`;
 
         el.setAttribute('data-type', type)
@@ -192,9 +217,10 @@ export class Node {
         const el = document.createElement("li");
 
         el.innerHTML = 
-            `<span class="json-value">
-                <span contenteditable="true" class="act-value">${value}</span>${isLast ? '' : ','}
-            </span>`;
+            `<span spellcheck="false" class="json-key">${key}:</span><span class="json-value">
+                <span contenteditable="true" class="act-value">${value}</span>
+            </span>
+            <div class="remove-value" title="Delete">&#9932;</div>`;
         
         el.setAttribute('data-type', type)
         this.children.push({
@@ -205,6 +231,7 @@ export class Node {
             parent: this,
             children: null,
         })
+        
         return el;
     }
 
@@ -230,13 +257,13 @@ export class Node {
             first = document.createElement('div')
             first.textContent = '['
             second = document.createElement('div')
-            second.textContent = `]${noComma ? '' : ','}`
+            second.textContent = `]`
             
         } else {
             first = document.createElement('div')
             first.textContent = '{'
             second = document.createElement('div')
-            second.textContent = `}${noComma ? '' : ','}`
+            second.textContent = `}`
         }
 
         if (!Object.keys(obj).length) {

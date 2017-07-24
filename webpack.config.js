@@ -24,8 +24,8 @@ module.exports = {
     new styleLintPlugin({
       configFile: '.stylelintrc',
       context: '',
-      files: '**/*.scss',
-      syntax: 'scss',
+      files: '**/*.sass',
+      syntax: 'sass',
       failOnError: false,
       quiet: false
     })
