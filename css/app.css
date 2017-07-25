@@ -4,6 +4,9 @@
 }
 
 .root-jsonedit {
+  -webkit-text-size-adjust: none;
+      -ms-text-size-adjust: none;
+          text-size-adjust: none;
   color: black;
   font-family: "Lucida Console", Monaco, monospace;
   padding: 20px;
