@@ -17,6 +17,6 @@
 `mountSelector` - css selector of element where JSON editor should be placed
 
 
-[Demo](https://lempiy.github.io/JSON-Editor/)
+[Demo](https://lempiy.github.io/JSON-edit/)
 
 #### Early alpha version
