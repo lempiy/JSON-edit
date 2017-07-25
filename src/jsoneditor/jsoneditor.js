@@ -3,6 +3,7 @@ import { Adder } from './adder';
 
 let editNode;
 let editEl;
+let prevInput;
 
 export class JsonEditor {
     mountSelector;
@@ -19,7 +20,7 @@ export class JsonEditor {
         }
         this.mountSelector = config.mountSelector;
         this.mounted = false;
-
+        this.elementsMap = new Map();
     }
 
     render() {
@@ -51,9 +52,7 @@ export class JsonEditor {
         this.mountElement.appendChild(this.root);
         this.createMap()
         this.attachEvents()
-        this.adder = new Adder();
-        console.dir(this.rootNode)
-        console.dir(this.elementsMap)
+        this.adder = new Adder(this.elementsMap);
     }
 
     _createRootNode() {
@@ -77,9 +76,11 @@ export class JsonEditor {
     }
 
     createMap() {
-        this.elementsMap = new WeakMap();
         const bindNodeToElement = (element, node) => {
             this.elementsMap.set(element, node);
+            if (node.parent) {
+                node.collapsed = true
+            }
             if (node.children && node.children.length) {
                 node.children.forEach(child => {
                     bindNodeToElement(child.element, child);
@@ -100,6 +101,14 @@ export class JsonEditor {
             if (event.target.classList.contains("creator")) {
                 this.showCreator(event.target);
             }
+            if (event.target.getAttribute('data-type' === "boolean")) {
+
+            }
+            if (event.target.classList.contains('json-value')) {
+                const valueEl = event.target;
+                const node = this.elementsMap.get(valueEl);
+                node.collapsed = !node.collapsed;
+            }
         })
         this.root.addEventListener('focus', (event) => {
             if (event.target.classList.contains("act-value")) {
@@ -111,7 +120,16 @@ export class JsonEditor {
                 this.onFinishEditValue(event.target)
             } 
         }, true)
-            
+        this.root.addEventListener('keypress', (event) => {
+            if (event.target.classList.contains("act-value")) {
+                this.onChangeEditValue(event);
+            } 
+        }, true)
+        this.root.addEventListener('input', (event) => {
+            if (event.target.classList.contains("act-value")) {
+                this.onInputValue(event);
+            } 
+        }, true)
     }
 
     showCreator(target) {
@@ -124,6 +142,46 @@ export class JsonEditor {
         editEl = target;
         let valueEl = JsonEditor.closestWithAttr(target, 'data-type');
         editNode = this.elementsMap.get(valueEl);
+    }
+
+    onInputValue(event) {
+        switch(editNode.type) {
+            case 'number': {
+                if (!/^\-?[0-9]+[\.0-9]*$/g.test(event.target.textContent)) {
+                    event.target.textContent = prevInput;
+                }
+                break;
+            }
+        }
+    }
+
+    onChangeEditValue(event) {
+        prevInput = event.target.textContent
+        switch(editNode.type) {
+            case 'number': {
+                console.log(event)
+                if (!/[0-9\.\-]/g.test(event.key)) {
+                    event.preventDefault()
+                } else if (event.key === '.') {
+                    /[\.]/g.test(event.target.textContent) && event.preventDefault()
+                } else if (event.key === '-') {
+                    /[\-]/g.test(event.target.textContent) && event.preventDefault()
+                }
+                break;
+            }
+            case 'boolean': {
+                if (editEl.textContent === "false" || editEl.textContent === "true") {
+                    editNode.data[editNode.key] = editEl.textContent === "false" ? 
+                        false : true;
+                } else {
+                    editEl.textContent = editNode.data[editNode.key];
+                }
+                break;
+            }
+            case 'string':
+            default:
+                break;
+        }
     }
 
     onFinishEditValue(target) {

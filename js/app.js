@@ -274,6 +274,7 @@
 	
 	var editNode = undefined;
 	var editEl = undefined;
+	var prevInput = undefined;
 	
 	var JsonEditor = (function () {
 	    function JsonEditor(config) {
@@ -284,6 +285,7 @@
 	        }
 	        this.mountSelector = config.mountSelector;
 	        this.mounted = false;
+	        this.elementsMap = new Map();
 	    }
 	
 	    _createClass(JsonEditor, [{
@@ -319,9 +321,7 @@
 	            this.mountElement.appendChild(this.root);
 	            this.createMap();
 	            this.attachEvents();
-	            this.adder = new _adder.Adder();
-	            console.dir(this.rootNode);
-	            console.dir(this.elementsMap);
+	            this.adder = new _adder.Adder(this.elementsMap);
 	        }
 	    }, {
 	        key: '_createRootNode',
@@ -350,9 +350,11 @@
 	        value: function createMap() {
 	            var _this = this;
 	
-	            this.elementsMap = new WeakMap();
 	            var bindNodeToElement = function bindNodeToElement(element, node) {
 	                _this.elementsMap.set(element, node);
+	                if (node.parent) {
+	                    node.collapsed = true;
+	                }
 	                if (node.children && node.children.length) {
 	                    node.children.forEach(function (child) {
 	                        bindNodeToElement(child.element, child);
@@ -376,6 +378,12 @@
 	                if (event.target.classList.contains("creator")) {
 	                    _this2.showCreator(event.target);
 	                }
+	                if (event.target.getAttribute('data-type' === "boolean")) {}
+	                if (event.target.classList.contains('json-value')) {
+	                    var valueEl = event.target;
+	                    var node = _this2.elementsMap.get(valueEl);
+	                    node.collapsed = !node.collapsed;
+	                }
 	            });
 	            this.root.addEventListener('focus', function (event) {
 	                if (event.target.classList.contains("act-value")) {
@@ -385,6 +393,16 @@
 	            this.root.addEventListener('blur', function (event) {
 	                if (event.target.classList.contains("act-value")) {
 	                    _this2.onFinishEditValue(event.target);
+	                }
+	            }, true);
+	            this.root.addEventListener('keypress', function (event) {
+	                if (event.target.classList.contains("act-value")) {
+	                    _this2.onChangeEditValue(event);
+	                }
+	            }, true);
+	            this.root.addEventListener('input', function (event) {
+	                if (event.target.classList.contains("act-value")) {
+	                    _this2.onInputValue(event);
 	                }
 	            }, true);
 	        }
@@ -401,6 +419,50 @@
 	            editEl = target;
 	            var valueEl = JsonEditor.closestWithAttr(target, 'data-type');
 	            editNode = this.elementsMap.get(valueEl);
+	        }
+	    }, {
+	        key: 'onInputValue',
+	        value: function onInputValue(event) {
+	            switch (editNode.type) {
+	                case 'number':
+	                    {
+	                        if (!/^\-?[0-9]+[\.0-9]*$/g.test(event.target.textContent)) {
+	                            event.target.textContent = prevInput;
+	                        }
+	                        break;
+	                    }
+	            }
+	        }
+	    }, {
+	        key: 'onChangeEditValue',
+	        value: function onChangeEditValue(event) {
+	            prevInput = event.target.textContent;
+	            switch (editNode.type) {
+	                case 'number':
+	                    {
+	                        console.log(event);
+	                        if (!/[0-9\.\-]/g.test(event.key)) {
+	                            event.preventDefault();
+	                        } else if (event.key === '.') {
+	                            /[\.]/g.test(event.target.textContent) && event.preventDefault();
+	                        } else if (event.key === '-') {
+	                            /[\-]/g.test(event.target.textContent) && event.preventDefault();
+	                        }
+	                        break;
+	                    }
+	                case 'boolean':
+	                    {
+	                        if (editEl.textContent === "false" || editEl.textContent === "true") {
+	                            editNode.data[editNode.key] = editEl.textContent === "false" ? false : true;
+	                        } else {
+	                            editEl.textContent = editNode.data[editNode.key];
+	                        }
+	                        break;
+	                    }
+	                case 'string':
+	                default:
+	                    break;
+	            }
 	        }
 	    }, {
 	        key: 'onFinishEditValue',
@@ -623,6 +685,7 @@
 	                noClosing: true,
 	                key: key
 	            });
+	
 	            this.children.push(val);
 	
 	            el.appendChild(val.element);
@@ -819,7 +882,7 @@
 
 /***/ }),
 /* 3 */
-/***/ (function(module, exports) {
+/***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
 	
@@ -831,8 +894,10 @@
 	
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 	
+	var _node = __webpack_require__(2);
+	
 	var Adder = (function () {
-	    function Adder() {
+	    function Adder(elementMap) {
 	        _classCallCheck(this, Adder);
 	
 	        this.optionsStruct = {
@@ -842,8 +907,11 @@
 	            array: "array",
 	            object: "object"
 	        };
+	        this.elementMap = elementMap;
+	        this.defaultoption = this.optionsStruct.string;
 	        this._createPannel();
 	        this._createHidder();
+	        this.attachEvents();
 	    }
 	
 	    _createClass(Adder, [{
@@ -855,21 +923,182 @@
 	            document.body.appendChild(this._hidder);
 	        }
 	    }, {
+	        key: "attachEvents",
+	        value: function attachEvents() {
+	            var _this = this;
+	
+	            this.hostElement.addEventListener('change', function (event) {
+	                if (event.target.tagName === "SELECT") {
+	                    _this.currOption = event.target.value;
+	                }
+	            });
+	            this.hostElement.addEventListener('click', function (event) {
+	                if (event.target === _this.applyButton) {
+	                    _this.apply();
+	                }
+	            });
+	        }
+	    }, {
+	        key: "detachEvents",
+	        value: function detachEvents() {
+	            this.hostElement.removeEventListener('change');
+	            this.hostElement.removeEventListener('click');
+	        }
+	    }, {
 	        key: "show",
 	        value: function show(node) {
 	            this.currentNode = node;
+	            if (this.currentNode.children.length) {
+	                var first = this.currentNode.children[0];
+	                this._setAndDisableOption(first.type, true);
+	            } else {
+	                this._setAndDisableOption(this.defaultoption, false);
+	            }
+	            this.keyElement.textContent = this.currentNode.children.length + ":";
 	            node.element.appendChild(this.hostElement);
 	        }
 	    }, {
 	        key: "hide",
 	        value: function hide() {
 	            this.currentNode = null;
+	            this._setAndDisableOption(this.defaultoption, false);
 	            this._hidder.appendChild(this.hostElement);
+	        }
+	    }, {
+	        key: "_setAndDisableOption",
+	        value: function _setAndDisableOption(option, isDisabled) {
+	            this.currOption = option;
+	            this.selectTypeInput.value = option;
+	            this.disabledOption = isDisabled;
+	        }
+	    }, {
+	        key: "_setNumberType",
+	        value: function _setNumberType() {
+	            this.inputContainer.innerHTML = "\n            <input type=\"number\" name=\"added\"/>\n        ";
+	        }
+	    }, {
+	        key: "_setTextType",
+	        value: function _setTextType() {
+	            this.inputContainer.innerHTML = "\n            <input type=\"text\" name=\"added\"/>\n        ";
+	        }
+	    }, {
+	        key: "_setBoolType",
+	        value: function _setBoolType() {
+	            this.inputContainer.innerHTML = "\n            <input type=\"checkbox\" name=\"added\"/>\n        ";
+	        }
+	    }, {
+	        key: "_setObjectType",
+	        value: function _setObjectType() {
+	            this.inputContainer.innerHTML = "\n            <div class=\"height-100\">{...}</div>\n        ";
+	        }
+	    }, {
+	        key: "_setArrayType",
+	        value: function _setArrayType() {
+	            this.inputContainer.innerHTML = "\n            <div class=\"height-100\">[]</div>\n        ";
+	        }
+	    }, {
+	        key: "_applyPrimitive",
+	        value: function _applyPrimitive() {
+	            var input = this.inputContainer.querySelector("[name='added']");
+	            var newEl = document.createElement("li");
+	            newEl.setAttribute('data-type', this.currOption);
+	            newEl.innerHTML = "<span spellcheck=\"false\" class=\"json-key\">" + this.currentNode.children.length + ":</span><span class=\"json-value\">\n            <span contenteditable=\"true\" class=\"act-value\">" + input.value + "</span>\n        </span>\n        <div class=\"remove-value\" title=\"Delete\">⛌</div></li>";
+	            var data = {
+	                element: newEl,
+	                children: null,
+	                data: this.currentNode.source,
+	                key: this.currentNode.children.length,
+	                parent: this.currentNode,
+	                type: this.currOption
+	            };
+	            this.currentNode.source.push(this._getCorrectPrimitive(input.value));
+	            this.currentNode.children.push(data);
+	            this.elementMap.set(newEl, data);
+	            console.log(this.currentNode);
+	            this.currentNode.element.appendChild(newEl);
+	            this.hide();
+	        }
+	    }, {
+	        key: "_applyComplex",
+	        value: function _applyComplex() {
+	            if (this.currOption === "object") {
+	                return this._applyObject();
+	            }
+	        }
+	    }, {
+	        key: "_applyObject",
+	        value: function _applyObject() {
+	            if (this.currentNode.children.length) {
+	                var first = this.currentNode.children[0];
+	                var clone = this._cloneAndEraseSource(first.source);
+	                var el = this.currentNode._createNodeValue(this.currentNode.children.length, clone, true);
+	                var valEl = el.querySelector('.json-value');
+	                this.currentNode.element.appendChild(el);
+	                var newNode = this.currentNode.children[this.currentNode.children.length - 1];
+	                this.hide();
+	                this.attachToMap(valEl, newNode);
+	            }
+	        }
+	    }, {
+	        key: "_cloneAndEraseSource",
+	        value: function _cloneAndEraseSource(source) {
+	            var _this2 = this;
+	
+	            return Object.keys(source).reduce(function (acc, key) {
+	                var type = _node.Node._detectValueType(source[key]);
+	                switch (type) {
+	                    case 'string':
+	                        acc[key] = "";
+	                        break;
+	                    case 'number':
+	                        acc[key] = 0;
+	                        break;
+	                    case 'null':
+	                        acc[key] = source[key];
+	                        break;
+	                    case 'boolean':
+	                        acc[key] = false;
+	                        break;
+	                    case 'object':
+	                        acc[key] = _this2._cloneAndEraseSource(source[key]);
+	                        break;
+	                    case 'array':
+	                        acc[key] = [];
+	                        break;
+	                }
+	                return acc;
+	            }, {});
+	        }
+	    }, {
+	        key: "_getCorrectPrimitive",
+	        value: function _getCorrectPrimitive(input) {
+	            switch (input) {
+	                case "string":
+	                    return String(input);
+	                case "number":
+	                    return +input;
+	                case "boolean":
+	                    return input === "true" ? true : false;
+	            }
+	        }
+	    }, {
+	        key: "apply",
+	        value: function apply() {
+	            switch (this.currOption) {
+	                case "string":
+	                case "number":
+	                case "boolean":
+	                    this._applyPrimitive();
+	                    break;
+	                case "array":
+	                case "object":
+	                    this._applyComplex();
+	            }
 	        }
 	    }, {
 	        key: "_createPannel",
 	        value: function _createPannel() {
-	            var _this = this;
+	            var _this3 = this;
 	
 	            this.hostElement = document.createElement("li");
 	            this.hostElement.classList.add("adder-host");
@@ -912,9 +1141,58 @@
 	                var opt = document.createElement("option");
 	                opt.value = option;
 	                opt.textContent = option;
-	                _this.selectTypeInput.appendChild(opt);
+	                _this3.selectTypeInput.appendChild(opt);
 	            });
 	            this.selectType.appendChild(this.selectTypeInput);
+	        }
+	    }, {
+	        key: "attachToMap",
+	        value: function attachToMap(initialEl, initialNode) {
+	            var _this4 = this;
+	
+	            var bindNodeToElement = function bindNodeToElement(element, node) {
+	                _this4.elementMap.set(element, node);
+	                if (node.children && node.children.length) {
+	                    node.children.forEach(function (child) {
+	                        bindNodeToElement(child.element, child);
+	                    });
+	                }
+	            };
+	            bindNodeToElement(initialEl, initialNode);
+	        }
+	    }, {
+	        key: "disabledOption",
+	        get: function get() {
+	            return this.selectTypeInput.disabled;
+	        },
+	        set: function set(isDisabled) {
+	            this.selectTypeInput.disabled = isDisabled;
+	        }
+	    }, {
+	        key: "currOption",
+	        get: function get() {
+	            return this._currOption;
+	        },
+	        set: function set(newOption) {
+	            switch (newOption) {
+	                case "number":
+	                    this._setNumberType();
+	                    break;
+	                case "null":
+	                case "string":
+	                    this._setTextType();
+	                    break;
+	                case "boolean":
+	                    this._setBoolType();
+	                    break;
+	                case "object":
+	                    this._setObjectType();
+	                    break;
+	                case "array":
+	                    this._setArrayType();
+	                    break;
+	            }
+	            this._currOption = newOption;
 	        }
 	    }]);
 	

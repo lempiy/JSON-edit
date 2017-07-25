@@ -119,6 +119,7 @@ export class Node {
             noClosing: true,
             key: key
         });
+        
         this.children.push(val);
         
         el.appendChild(val.element);

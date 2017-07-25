@@ -4,8 +4,10 @@
     text-size-adjust: none
     color: black
     font-family: "Lucida Console", Monaco, monospace
+    font-family: arial, tahoma, helvetica, sans-serif
+    font-size: 12px
     padding: 20px
-    background-color: #FFE
+    //background-color: #FFE
     border: 1px solid #333
     border-radius: 5px
     position: relative
@@ -13,27 +15,28 @@
     .inline-brace
         display: inline-block
     & > ul[data-type] > li
-        margin-left: 45px
+        margin-left: 25px
     .creator
         position: absolute
-        top: 3px
+        top: 1px
         left: 35px
         cursor: pointer
         font-size: 12px
         color: #999
         display: none
         &:hover
-            color: #05d00e
+            color: #da2626
     .collapser
         position: absolute
         top: 5px
-        left: 0px
+        left: 1px
         width: 8px
         height: 8px
         border: 1px solid #666
         border-radius: 2px
         background-color: #fff
         cursor: pointer
+        background: linear-gradient(to bottom, #feffff 0%,#ddf1f9 35%,#a0d8ef 100%)
         &::after
             top: 50%
             left: 50%
@@ -46,8 +49,13 @@
         left: 10px
     & > .title-root
         position: absolute
+        font-family: "Lucida Console", Monaco, monospace
+        font-weight: bold
         top: 17px
         left: 20px
+        font-size: 16px
+        letter-spacing: 1px
+        color: #0b1386
     [data-collapsed="false"], &[data-collapsed="false"]
         .collapser::after
             content: "-"
@@ -59,12 +67,28 @@
     [data-collapsed]
         &.complex.array
             & > .json-value::before
+                font-family: "Lucida Console", Monaco, monospace
+                font-size: 16px
                 content: "[]"
                 display: block
+                letter-spacing: 1px
+                margin-top: 0px
+                margin-left: 3px
+                font-weight: bold
+                color: #0b1386
+                cursor: pointer
         &.complex.object
             & > .json-value::before
+                font-family: "Lucida Console", Monaco, monospace
+                font-size: 16px
                 content: "{}"
                 display: block
+                letter-spacing: 1px
+                margin-top: 0px
+                margin-left: 3px
+                font-weight: bold
+                color: #0b1386
+                cursor: pointer
     ul
         list-style-type: none
         margin-left: 0
@@ -81,12 +105,12 @@
         //     border-left: 1px dotted #444
         li[data-type]::after, li.complex::after
             content: ''
-            width: 45px
+            width: 25px
             height: 1px
             display: block
             position: absolute
-            top: 9px
-            left: -50px
+            top: 6px
+            left: -30px
             border-bottom: 1px dotted #444
         li[data-type]::before, li.complex::before
             content: ''
@@ -94,20 +118,20 @@
             height: 100%
             display: block
             position: absolute
-            top: 10px
-            left: -50px
+            top: 7px
+            left: -30px
             border-left: 1px dotted #444
         li[data-type]:last-of-type::before, li.complex:last-of-type::before
             border-left: none
         li[data-type]:first-of-type::before, li.complex:first-of-type::before
             top: 0px
-            height: calc(100% + 10px)
+            height: calc(100% + 6px)
         li[data-type]:only-of-type::before, li.complex:only-of-type::before
             top: 0px
             height: 10px
             border-left: 1px dotted #444
         li
-            margin-left: 45px
+            margin-left: 25px
             position: relative
             display: flex
             .json-key-container
@@ -119,6 +143,7 @@
             .json-value
                 padding-left: 10px
                 position: relative
+                white-space: nowrap
                 &:hover > .collapser
                     display: block
                 &:hover > .creator
@@ -143,6 +168,11 @@
                             & > .remove-value
                                 display: block
                                 cursor: pointer
+                [data-collapsed=true]
+                    .json-value, li[data-type]
+                        & > .remove-value
+                            &.complex-value
+                                right: -10px
             span
                 display: inline
                 vertical-align: top
@@ -150,24 +180,28 @@
                 display: inline-block
                 vertical-align: top
             .json-key
-                color: crimson
+                color: #000
+                font-weight: bold
                 cursor: default
             &[data-type="boolean"]
                 .json-value
                     .act-value
-                        color: orange
+                        color: #bb511b
             &[data-type="number"]
                 .json-value
                     .act-value
-                        color: blue
+                        color: #0e33ff
             &[data-type="string"]
                 .json-value
                     .act-value
-                        color: green
+                        color: #1e9c52
                         &::before
                             content: '"'
                         &::after
                             content: '"'
+
+    .complex
+        line-height: 20px
     
     .adder-host
         display: flex
@@ -185,3 +219,6 @@
                 width: 50%
             .select-type
                 width: 30%
+                justify-content: center
+            .height-100
+                height: 100%
