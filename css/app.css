@@ -1,6 +1,6 @@
 /** postcss-bem-linter: define main-component; weak */
 .hidden {
-  display: none;
+  display: none !important;
 }
 
 .root-jsonedit {
@@ -198,6 +198,10 @@
   border-radius: 2px;
 }
 
+.root-jsonedit ul li .json-value li span.json-value {
+  max-height: 20px;
+}
+
 .root-jsonedit ul li .json-value li .json-value, .root-jsonedit ul li .json-value li li[data-type] {
   position: relative;
 }
@@ -272,13 +276,52 @@
   display: flex;
   width: 400px;
   height: 25px;
-  background-color: #fef;
+  background-color: #ffcd5c;
+  background: linear-gradient(to right, white 0%, #ffce5c 22%, #ffce5c 80%, white 100%);
+  -ms-flex-align: center;
+      align-items: center;
+}
+
+.root-jsonedit .adder-host .json-key {
+  margin-right: 10px;
+}
+
+.root-jsonedit .adder-host input[type=text] {
+  border: 1px solid #888;
+  border-radius: 3px;
+}
+
+.root-jsonedit .adder-host input[type=text]:focus {
+  outline: none;
+}
+
+.root-jsonedit .adder-host button {
+  border: 1px solid #888;
+  border-radius: 3px;
+  background-color: #fff;
+  cursor: pointer;
+}
+
+.root-jsonedit .adder-host button:focus {
+  outline: none;
+}
+
+.root-jsonedit .adder-host button:active {
+  background-color: #e0ffdc;
+}
+
+.root-jsonedit .adder-host select {
+  border: 1px solid #888;
+  background-color: #fff;
+  border-radius: 3px;
 }
 
 .root-jsonedit .adder-host .adder-body {
   display: -ms-inline-flexbox;
   display: inline-flex;
   width: 100%;
+  -ms-flex-align: center;
+      align-items: center;
 }
 
 .root-jsonedit .adder-host .adder-body .input-container, .root-jsonedit .adder-host .adder-body .select-type, .root-jsonedit .adder-host .adder-body .apply {

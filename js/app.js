@@ -48,7 +48,9 @@
 	
 	var _jsoneditorJsoneditor = __webpack_require__(1);
 	
-	__webpack_require__(4);
+	var _jsoneditorParser = __webpack_require__(4);
+	
+	__webpack_require__(5);
 	
 	var appContainer = document.querySelector('#app');
 	
@@ -57,6 +59,52 @@
 	var jsoneditor = new _jsoneditorJsoneditor.JsonEditor({
 	  mountSelector: '#app'
 	});
+	
+	// console.log(Parser.parse(`{
+	//     "_id": "5971ee1ea6fbbd228ffc6569",
+	//     "index": 0,
+	//     "guid": "b0a942a6-84b2-41d0-8743-a29a7d1728b3",
+	//     "isActive": false,
+	//     "balance": "$1,967.07",
+	//     "picture": "http://placehold.it/32x32" \`list: ["cool, wow"]\`,
+	//     "age": 28 \`list: ["cool, wow"]\`,
+	//     "eyeColor": "green",
+	//     "name": "Madge Spencer",
+	//     "gender": "female",
+	//     "company": "OCTOCORE",
+	//     "email": "madgespencer@octocore.com",
+	//     "phone": "+1 (860) 509-3745",
+	//     "address": "959 Beadel Street, Elliston, South Dakota, 9408",
+	//     "about": "Cupidatat aute reprehenderit id veniam mollit qui voluptate exercitation reprehenderit pariatur. Ad anim amet nisi mollit ex consectetur pariatur nulla amet aliqua. Exercitation duis nulla excepteur aute culpa sint occaecat nostrud aliqua consectetur fugiat. Consequat irure aliqua veniam ad sit.\r\n",
+	//     "registered": "2017-07-07T12:54:50 -03:00",
+	//     "latitude": 36.295983,
+	//     "longitude": -99.200515,
+	//     "tags": [
+	//       "non",
+	//       "eu",
+	//       "deserunt",
+	//       "exercitation",
+	//       "ipsum",
+	//       "magna",
+	//       "est"
+	//     ],
+	//     "friends": [
+	//       {
+	//         "id": 0,
+	//         "name": "Zelma Roberson"
+	//       },
+	//       {
+	//         "id": 1,
+	//         "name": "Glenna Tillman"
+	//       },
+	//       {
+	//         "id": 2,
+	//         "name": "Marsha Meyers"
+	//       }
+	//     ],
+	//     "greeting": "Hello, Madge Spencer! You have 1 unread messages.",
+	//     "favoriteFruit": "strawberry"
+	//   }`));
 	
 	jsoneditor.loadSource([{
 	  "_id": "5971ee1ea6fbbd228ffc6569",
@@ -272,9 +320,10 @@
 	
 	var _adder = __webpack_require__(3);
 	
-	var editNode = undefined;
-	var editEl = undefined;
-	var prevInput = undefined;
+	var editNode = undefined,
+	    editEl = undefined,
+	    editValue = undefined,
+	    prevInput = undefined;
 	
 	var JsonEditor = (function () {
 	    function JsonEditor(config) {
@@ -369,17 +418,22 @@
 	            var _this2 = this;
 	
 	            this.root.addEventListener('click', function (event) {
+	                if (editValue) {
+	                    _this2._clear();
+	                }
 	                if (event.target.classList.contains("collapser")) {
 	                    _this2.collapseNode(event.target);
-	                }
-	                if (event.target.classList.contains("remove-value")) {
+	                } else if (event.target.classList.contains("remove-value")) {
 	                    _this2.deleteArrayValue(event.target);
-	                }
-	                if (event.target.classList.contains("creator")) {
+	                } else if (event.target.classList.contains("creator")) {
 	                    _this2.showCreator(event.target);
-	                }
-	                if (event.target.getAttribute('data-type' === "boolean")) {}
-	                if (event.target.classList.contains('json-value')) {
+	                } else if (event.target.classList.contains('act-value')) {
+	                    var typeEl = JsonEditor.closestWithAttr(event.target, 'data-type');
+	                    var type = typeEl.getAttribute('data-type');
+	                    if (type === 'boolean') {
+	                        _this2._changeBooleanValue(typeEl, event.target);
+	                    }
+	                } else if (event.target.classList.contains('json-value')) {
 	                    var valueEl = event.target;
 	                    var node = _this2.elementsMap.get(valueEl);
 	                    node.collapsed = !node.collapsed;
@@ -426,7 +480,7 @@
 	            switch (editNode.type) {
 	                case 'number':
 	                    {
-	                        if (!/^\-?[0-9]+[\.0-9]*$/g.test(event.target.textContent)) {
+	                        if (!/^\-?[0-9]+(\.[0-9]+)?$/g.test(event.target.textContent)) {
 	                            event.target.textContent = prevInput;
 	                        }
 	                        break;
@@ -473,7 +527,12 @@
 	                        if (isNaN(+editEl.textContent)) {
 	                            editEl.textContent = editNode.data[editNode.key];
 	                        } else {
-	                            editNode.data[editNode.key] = editEl.textContent;
+	                            if (editEl.textContent === "") {
+	                                editEl.textContent = 0;
+	                                editNode.data[editNode.key] = 0;
+	                            } else {
+	                                editNode.data[editNode.key] = editEl.textContent;
+	                            }
 	                        }
 	                        break;
 	                    }
@@ -540,6 +599,29 @@
 	
 	                n.key = i;
 	            });
+	        }
+	    }, {
+	        key: '_changeBooleanValue',
+	        value: function _changeBooleanValue(el, actEl) {
+	            editEl = el;
+	            editValue = actEl;
+	            editNode = this.elementsMap.get(el);
+	            actEl.classList.add('hidden');
+	            actEl.nextElementSibling.classList.remove('hidden');
+	        }
+	    }, {
+	        key: '_clear',
+	        value: function _clear() {
+	            if (editNode.type === 'boolean') {
+	                editValue.classList.remove("hidden");
+	                editValue.nextElementSibling.classList.add('hidden');
+	                editValue.textContent = editValue.nextElementSibling.checked ? true : false;
+	                editNode.data[editNode.key] = editValue.nextElementSibling.checked ? true : false;
+	            }
+	            editEl = null;
+	            editValue = null;
+	            editNode = null;
+	            console.log(editEl, editValue, editNode);
 	        }
 	    }], [{
 	        key: 'getValueElement',
@@ -769,6 +851,9 @@
 	            var el = document.createElement("li");
 	
 	            el.innerHTML = '<span spellcheck="false" class="json-key">' + key + ':</span><span class="json-value">\n                <span spellcheck="false" contenteditable="true" class="act-value">' + value + '</span>\n            </span>';
+	            if (type === 'boolean') {
+	                el.innerHTML = '<span spellcheck="false" class="json-key">' + key + ':</span><span class="json-value">\n                    <span spellcheck="false" class="act-value">' + value + '</span>\n                    <input type="checkbox" class=\'hidden\' ' + (value === true ? 'checked' : '') + '>\n                </span>';
+	            }
 	
 	            el.setAttribute('data-type', type);
 	            this.children.push({
@@ -1203,6 +1288,370 @@
 
 /***/ }),
 /* 4 */
+/***/ (function(module, exports) {
+
+	"use strict";
+	
+	Object.defineProperty(exports, "__esModule", {
+	    value: true
+	});
+	
+	var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+	
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+	
+	var Parser = (function () {
+	    function Parser() {
+	        _classCallCheck(this, Parser);
+	    }
+	
+	    _createClass(Parser, null, [{
+	        key: "parse",
+	        value: function parse(str) {
+	            var c = 0; //cursor
+	            var result = undefined;
+	            var parseObj = function parseObj() {
+	                var node = {};
+	                var inQuotes = false;
+	                var key = "";
+	                var inKey = false;
+	                var value = "";
+	                var inValue = false;
+	                var tag = "";
+	                var inTag = false;
+	                var prevChar = '';
+	                var afterCol = false;
+	                var type = null;
+	                var afterClosing = false;
+	
+	                var reset = function reset() {
+	                    inQuotes = false;
+	                    key = "";
+	                    inKey = false;
+	                    value = "";
+	                    inValue = false;
+	                    tag = "";
+	                    inTag = false;
+	                    prevChar = '';
+	                    afterCol = false;
+	                    type = null;
+	                };
+	
+	                while (c < str.length) {
+	                    // if (key === "age") {
+	                    //     debugger;
+	                    // }
+	                    var char = str[c];
+	                    if (str[c] === '"' && !inTag) {
+	                        if (!inKey && key && !afterCol) {
+	                            throw new Error("Invalid syntax at " + c + " - char '" + str[c] + "'");
+	                        }
+	                        inQuotes = !inQuotes;
+	                        if (prevChar === '\\') {
+	                            if (inKey) {
+	                                key += str[c];
+	                            } else if (inValue) {
+	                                value += str[c];
+	                            }
+	                        }
+	                        if (value) {
+	                            inValue = false; //if value finish collecting value
+	                        } else if (key) {
+	                                if (inKey) {
+	                                    inKey = false; //if inKey finish collecting key
+	                                } else {
+	                                        inValue = true; //if no inKey and key exists start collecting value
+	                                        type = "string";
+	                                    }
+	                            } else {
+	                                // if no key
+	                                inKey = true;
+	                            }
+	                    } else if (!inQuotes && !inTag) {
+	                        if (str[c] === '`') {
+	                            if (key) {
+	                                inTag = true;
+	                            } else {
+	                                throw new Error("Invalid syntax at " + c + " - char '" + str[c] + "'");
+	                            }
+	                        } else if (str[c] === '}') {
+	                            // object closet move cursor return to prev
+	                            if (key) {
+	                                afterClosing = true;
+	                                if (!type) {
+	                                    type = detectType(value);
+	                                }
+	                                createPair(node, key, value, tag, type);
+	                            } else {
+	                                throw new Error("Invalid syntax at " + c + " - char '" + str[c] + "'");
+	                            }
+	                            return node;
+	                        } else if (str[c] === '{') {
+	                            ++c;
+	                            value = parseObj();
+	                            type = "object";
+	                        } else if (str[c] === '[') {
+	                            ++c;
+	                            value = parseArray();
+	                            type = "array";
+	                        } else if (str[c] === ':') {
+	                            afterCol = true;
+	                        } else if (str[c] === ',') {
+	                            if (!type) {
+	                                type = detectType(value);
+	                            }
+	                            createPair(node, key, value, tag, type);
+	                            reset();
+	                        } else if (str[c] === '`') {
+	                            inTag != inTag;
+	                        } else {
+	                            if (/\S/g.test(str[c])) {
+	                                if (inValue) {
+	                                    value += str[c];
+	                                } else if (key && !inValue && afterCol && !value) {
+	                                    inValue = true;
+	                                    value += str[c];
+	                                } else {
+	                                    throw new Error("Invalid syntax at " + c + " - char '" + str[c] + "'");
+	                                }
+	                            } else {
+	                                if (inValue) {
+	                                    inValue = false;
+	                                }
+	                            }
+	                        }
+	                    } else if (inTag) {
+	                        if (str[c] === '`') {
+	                            inTag = false;
+	                        } else {
+	                            tag += str[c];
+	                        }
+	                    } else {
+	                        // if in qoutes
+	                        if (str[c] === '\\') {
+	                            prevChar = '\\';
+	                        } else {
+	                            prevChar = '';
+	                        }
+	                        if (inKey) {
+	                            key += str[c];
+	                        } else if (inValue) {
+	                            value += str[c];
+	                        } else {
+	                            throw new Error("Invalid syntax at " + c + " - char '" + str[c] + "'");
+	                        }
+	                    }
+	                    c++;
+	                }
+	
+	                if (afterClosing) {
+	                    if (key) {
+	                        createPair(node, key, value, tag, type);
+	                        reset();
+	                    }
+	                    return node;
+	                } else {
+	                    throw new Error("Invalid JSON");
+	                }
+	            };
+	
+	            var detectType = function detectType(val) {
+	                if (val === "") {
+	                    throw new Error("Invalid syntax.");
+	                } else if (!isNaN(+val)) {
+	                    return "number";
+	                } else if (val === "true" || val === "false") {
+	                    return "boolean";
+	                } else {
+	                    return "string";
+	                }
+	            };
+	
+	            var createPair = function createPair(node, ky, val, tag, type) {
+	                switch (type) {
+	                    case "number":
+	                        node[ky] = {
+	                            value: +val,
+	                            tag: tag
+	                        };
+	                        break;
+	                    case "boolean":
+	                        node[ky] = {
+	                            value: val === "true" ? true : false,
+	                            tag: tag
+	                        };
+	                        break;
+	                    default:
+	                        node[ky] = {
+	                            value: val,
+	                            tag: tag
+	                        };
+	                }
+	            };
+	
+	            var createValue = function createValue(node, val, tag, type) {
+	                switch (type) {
+	                    case "number":
+	                        node.push({
+	                            value: +val,
+	                            tag: tag
+	                        });
+	                        break;
+	                    case "boolean":
+	                        node.push({
+	                            value: val === "true" ? true : false,
+	                            tag: tag
+	                        });
+	                        break;
+	                    default:
+	                        node.push({
+	                            value: val,
+	                            tag: tag
+	                        });
+	                }
+	            };
+	
+	            var parseArray = function parseArray() {
+	                var node = [];
+	                var inQuotes = false;
+	                var value = "";
+	                var inValue = false;
+	                var tag = "";
+	                var inTag = false;
+	                var prevChar = '';
+	                var afterCol = false;
+	                var type = null;
+	                var afterClosing = false;
+	
+	                var reset = function reset() {
+	                    inQuotes = false;
+	                    value = "";
+	                    inValue = false;
+	                    tag = "";
+	                    inTag = false;
+	                    prevChar = '';
+	                    afterCol = false;
+	                    type = null;
+	                };
+	
+	                while (c < str.length) {
+	                    var char = str[c];
+	                    if (str[c] === '"' && !inTag) {
+	                        if (prevChar === '\\') {
+	                            if (inValue) {
+	                                value += str[c];
+	                            }
+	                        }
+	                        if (value) {
+	                            if (!inQuotes) {
+	                                throw new Error("Invalid syntax at " + c + " - char '" + str[c] + "'");
+	                            }
+	                            inValue = false;
+	                        } else {
+	                            inValue = true;
+	                            type = "string";
+	                        }
+	                        inQuotes = !inQuotes;
+	                    } else if (!inQuotes && !inTag) {
+	                        if (str[c] === '`') {
+	                            if (value !== "" || type === "string") {
+	                                inTag = true;
+	                            } else {
+	                                throw new Error("Invalid syntax at " + c + " - char '" + str[c] + "'");
+	                            }
+	                        } else if (str[c] === ']') {
+	                            // object closet move cursor return to prev
+	                            if (value !== "" || type === "string") {
+	                                afterClosing = true;
+	                                if (!type) {
+	                                    type = detectType(value);
+	                                }
+	                                createValue(node, value, tag, type);
+	                            } else {
+	                                throw new Error("Invalid syntax at " + c + " - char '" + str[c] + "'");
+	                            }
+	                            return node;
+	                        } else if (str[c] === '[') {
+	                            ++c;
+	                            value = parseArray();
+	                            type = "array";
+	                        } else if (str[c] === '{') {
+	                            if (value) {
+	                                throw new Error("Invalid syntax at " + c + " - char '" + str[c] + "'");
+	                            }
+	                            ++c;
+	                            value = parseObj();
+	                            type = "object";
+	                        } else if (str[c] === ',') {
+	                            if (!type) {
+	                                type = detectType(value);
+	                            }
+	                            createValue(node, value, tag, type);
+	                            reset();
+	                        } else if (str[c] === '`') {
+	                            inTag != inTag;
+	                        } else {
+	                            if (/\S/g.test(str[c])) {
+	                                if (!inValue && !value) {
+	                                    inValue = true;
+	                                } else {
+	                                    throw new Error("Invalid syntax at " + c + " - char '" + str[c] + "'");
+	                                }
+	                                value += str[c];
+	                            } else {
+	                                if (inValue) {
+	                                    inValue = false;
+	                                }
+	                            }
+	                        }
+	                    } else if (inTag) {
+	                        if (str[c] === '`') {
+	                            inTag = false;
+	                        } else {
+	                            tag += str[c];
+	                        }
+	                    } else {
+	                        // if in qoutes
+	                        if (str[c] === '\\') {
+	                            prevChar = '\\';
+	                        } else {
+	                            prevChar = '';
+	                        }
+	                        if (inValue) {
+	                            value += str[c];
+	                        }
+	                    }
+	                    c++;
+	                }
+	
+	                if (afterClosing) {
+	                    createValue(node, value, tag, type);
+	                    reset();
+	                    return node;
+	                } else {
+	                    throw new Error("Invalid JSON");
+	                }
+	            };
+	
+	            if (str[0] === '{') {
+	                ++c;
+	                return parseObj();
+	            } else if (str[0] === '[') {
+	                ++c;
+	                return parseArray();
+	            } else {
+	                throw new Error("Invalid syntax at 0 - char '" + str[0] + "'");
+	            }
+	        }
+	    }]);
+	
+	    return Parser;
+	})();
+
+	exports.Parser = Parser;
+
+/***/ }),
+/* 5 */
 /***/ (function(module, exports) {
 
 	// removed by extract-text-webpack-plugin
