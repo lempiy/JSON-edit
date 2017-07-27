@@ -209,10 +209,33 @@
         display: flex
         width: 400px
         height: 25px
-        background-color: #fef
+        background-color: #ffcd5c
+        background: linear-gradient(to right, rgba(255,255,255,1) 0%, rgba(255,206,92,1) 22%, rgba(255,206,92,1) 80%, rgba(255,255,255,1) 100%)
+        align-items: center
+        .json-key
+            margin-right: 10px
+        input[type=text]
+            border: 1px solid #888
+            border-radius: 3px
+            &:focus
+                outline: none
+        button
+            border: 1px solid #888
+            border-radius: 3px
+            background-color: #fff
+            cursor: pointer
+            &:focus
+                outline: none
+            &:active
+                background-color: #e0ffdc
+        select
+            border: 1px solid #888
+            background-color: #fff
+            border-radius: 3px
         .adder-body
             display: inline-flex
             width: 100%
+            align-items: center
             .input-container, .select-type, .apply
                 display: flex
                 align-items: center
