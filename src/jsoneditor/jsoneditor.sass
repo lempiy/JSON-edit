@@ -1,5 +1,5 @@
 .hidden
-    display: none
+    display: none !important
 .root-jsonedit
     text-size-adjust: none
     color: black
@@ -152,6 +152,8 @@
                     outline: 2px dashed lightblue
                     border-radius: 2px
                 li
+                    span.json-value
+                        max-height: 20px
                     .json-value, li[data-type]
                         position: relative
                         & > .remove-value

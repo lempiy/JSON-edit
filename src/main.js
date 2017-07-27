@@ -2,6 +2,7 @@
 
 require('./main.sass');
 import { JsonEditor } from './jsoneditor/jsoneditor';
+import { Parser } from './jsoneditor/parser';
 
 var appContainer = document.querySelector('#app');
 
@@ -10,6 +11,52 @@ appContainer.innerHTML = '<div class="main-component"><h1 class="main-component_
 const jsoneditor = new JsonEditor({
     mountSelector: '#app',
 })
+
+// console.log(Parser.parse(`{
+//     "_id": "5971ee1ea6fbbd228ffc6569",
+//     "index": 0,
+//     "guid": "b0a942a6-84b2-41d0-8743-a29a7d1728b3",
+//     "isActive": false,
+//     "balance": "$1,967.07",
+//     "picture": "http://placehold.it/32x32" \`list: ["cool, wow"]\`,
+//     "age": 28 \`list: ["cool, wow"]\`,
+//     "eyeColor": "green",
+//     "name": "Madge Spencer",
+//     "gender": "female",
+//     "company": "OCTOCORE",
+//     "email": "madgespencer@octocore.com",
+//     "phone": "+1 (860) 509-3745",
+//     "address": "959 Beadel Street, Elliston, South Dakota, 9408",
+//     "about": "Cupidatat aute reprehenderit id veniam mollit qui voluptate exercitation reprehenderit pariatur. Ad anim amet nisi mollit ex consectetur pariatur nulla amet aliqua. Exercitation duis nulla excepteur aute culpa sint occaecat nostrud aliqua consectetur fugiat. Consequat irure aliqua veniam ad sit.\r\n",
+//     "registered": "2017-07-07T12:54:50 -03:00",
+//     "latitude": 36.295983,
+//     "longitude": -99.200515,
+//     "tags": [
+//       "non",
+//       "eu",
+//       "deserunt",
+//       "exercitation",
+//       "ipsum",
+//       "magna",
+//       "est"
+//     ],
+//     "friends": [
+//       {
+//         "id": 0,
+//         "name": "Zelma Roberson"
+//       },
+//       {
+//         "id": 1,
+//         "name": "Glenna Tillman"
+//       },
+//       {
+//         "id": 2,
+//         "name": "Marsha Meyers"
+//       }
+//     ],
+//     "greeting": "Hello, Madge Spencer! You have 1 unread messages.",
+//     "favoriteFruit": "strawberry"
+//   }`));
 
 jsoneditor.loadSource([
   {

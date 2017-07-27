@@ -201,6 +201,13 @@ export class Node {
             `<span spellcheck="false" class="json-key">${key}:</span><span class="json-value">
                 <span spellcheck="false" contenteditable="true" class="act-value">${value}</span>
             </span>`;
+        if (type === 'boolean') {
+            el.innerHTML = 
+                `<span spellcheck="false" class="json-key">${key}:</span><span class="json-value">
+                    <span spellcheck="false" class="act-value">${value}</span>
+                    <input type="checkbox" class='hidden' ${value === true ? 'checked' : ''}>
+                </span>`;
+        }
 
         el.setAttribute('data-type', type)
         this.children.push({

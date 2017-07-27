@@ -1,9 +1,10 @@
 import { Node } from './node';
 import { Adder } from './adder';
 
-let editNode;
-let editEl;
-let prevInput;
+let editNode,
+    editEl,
+    editValue,
+    prevInput;
 
 export class JsonEditor {
     mountSelector;
@@ -92,23 +93,31 @@ export class JsonEditor {
 
     attachEvents() {
         this.root.addEventListener('click', (event) => {
+            if (editValue) {
+                this._clear()
+            }
             if (event.target.classList.contains("collapser")) {
                 this.collapseNode(event.target);
-            }
+            } else 
             if (event.target.classList.contains("remove-value")) {
                 this.deleteArrayValue(event.target);
-            }
+            } else
             if (event.target.classList.contains("creator")) {
                 this.showCreator(event.target);
-            }
-            if (event.target.getAttribute('data-type' === "boolean")) {
-
-            }
+            } else
+            if (event.target.classList.contains('act-value')) {
+                let typeEl = JsonEditor.closestWithAttr(event.target, 'data-type');
+                let type = typeEl.getAttribute('data-type');
+                if (type === 'boolean') {
+                    this._changeBooleanValue(typeEl, event.target)
+                }
+            } else
             if (event.target.classList.contains('json-value')) {
                 const valueEl = event.target;
                 const node = this.elementsMap.get(valueEl);
                 node.collapsed = !node.collapsed;
-            }
+            } 
+            
         })
         this.root.addEventListener('focus', (event) => {
             if (event.target.classList.contains("act-value")) {
@@ -147,7 +156,7 @@ export class JsonEditor {
     onInputValue(event) {
         switch(editNode.type) {
             case 'number': {
-                if (!/^\-?[0-9]+[\.0-9]*$/g.test(event.target.textContent)) {
+                if (!/^\-?[0-9]+(\.[0-9]+)?$/g.test(event.target.textContent)) {
                     event.target.textContent = prevInput;
                 }
                 break;
@@ -190,7 +199,12 @@ export class JsonEditor {
                 if (isNaN(+editEl.textContent)) {
                     editEl.textContent = editNode.data[editNode.key];
                 } else {
-                    editNode.data[editNode.key] = editEl.textContent;
+                    if (editEl.textContent === "") {
+                        editEl.textContent = 0
+                        editNode.data[editNode.key] = 0
+                    } else {
+                        editNode.data[editNode.key] = editEl.textContent;
+                    }
                 }
                 break;
             }
@@ -291,5 +305,26 @@ export class JsonEditor {
             current = current.parentNode;
         }
         return null;
+    }
+
+    _changeBooleanValue(el, actEl) {
+        editEl = el;
+        editValue = actEl;
+        editNode = this.elementsMap.get(el);
+        actEl.classList.add('hidden')
+        actEl.nextElementSibling.classList.remove('hidden')
+    }
+
+    _clear() {
+        if (editNode.type === 'boolean') {
+            editValue.classList.remove("hidden")
+            editValue.nextElementSibling.classList.add('hidden')
+            editValue.textContent = editValue.nextElementSibling.checked ? true : false
+            editNode.data[editNode.key] = editValue.nextElementSibling.checked ? true : false
+        }
+        editEl = null;
+        editValue = null;
+        editNode = null;
+        console.log(editEl, editValue, editNode)
     }
 }
