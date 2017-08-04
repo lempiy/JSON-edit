@@ -92,7 +92,7 @@ export class JsonEditor {
     }
 
     destroy() {
-        // Free memory to let GC clean everything
+        // Free references to let GC clean everything
         this.adder.hostElement.parentNode.removeChild(this.adder.hostElement)
         this.root.parentNode.removeChild(this.root)
         this.mountSelector = null;
@@ -104,9 +104,9 @@ export class JsonEditor {
         this.elementsMap = null;
         this.adder = null;
         editNode = null;
-        editNode = null;
-        editNode = null;
-        editNode = null;
+        editEl = null;
+        editValue = null;
+        prevInput = null;
     }
 
     attachEvents() {
