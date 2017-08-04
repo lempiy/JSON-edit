@@ -28,17 +28,13 @@ export class Parser {
                 afterCol = false;
                 type = null;
             }
-
+            
             while (c < str.length) {
-                // if (key === "age") {
-                //     debugger;
-                // }
                 let char = str[c]
                 if (str[c] === '"' && !inTag) {
                     if (!inKey && key && !afterCol) {
                         throw new Error(`Invalid syntax at ${c} - char '${str[c]}'`)
                     }
-                    inQuotes = !inQuotes;
                     if (prevChar === '\\') {
                         if (inKey) {
                             key += str[c]
@@ -59,6 +55,7 @@ export class Parser {
                     } else { // if no key
                         inKey = true
                     }
+                    inQuotes = !inQuotes;
                 } else
                 if (!inQuotes && !inTag) {
                     if (str[c] === '`') {
@@ -337,6 +334,184 @@ export class Parser {
             return parseArray()
         } else {
             throw new Error(`Invalid syntax at 0 - char '${str[0]}'`)
+        }
+    }
+
+    static serialize(source, trim) {
+
+        const getValue = (value) => {
+            switch (typeof value) {
+                case 'number':
+                case 'boolean':
+                    return value
+                default:
+                    return `"${value}"`  
+            }
+        }
+
+        const createElement = (node, trim) => {
+            let value = getValue(node.value || node)
+            if (trim) {
+                if (node.tag) {
+                    return `${value}${node.tag}`
+                }
+            } else {
+                if (node.tag) {
+                    return `${value} ${node.tag}`
+                }
+            }
+            return `${value}`            
+        }
+
+        const createRow = (key, node, trim) => {
+            let value = getValue(node.value)
+            if (trim) {
+                if (node.tag) {
+                    return `"${key}":${value}\`${node.tag}\``
+                } else {
+                    return `"${key}":${value}`
+                }
+            } else {
+                if (node.tag) {
+                    return `"${key}": ${value} \`${node.tag}\``
+                } else {
+                    return `"${key}": ${value}`
+                }
+            }
+        }
+
+        const serializeArray = (source, config, ns) => {
+            let result = "["
+            if (!config.trim) {
+                result += "\n"
+                ns += config.basicSpace
+            }
+            const entries = Object.entries(source);
+            entries.reduce((acc, item, i) => {
+                let [index, node] = item
+                let needQoutes = false
+                let row;
+                let v = node.value || node
+                switch (typeof v) {
+                    case 'string':
+                        needQoutes = true
+                    case 'number':
+                    case 'boolean':
+                        let row = createElement(node, config.trim)
+                        if (!config.trim) {
+                            row = " ".repeat(ns) + row
+                        }
+                        if (i != entries.length - 1) {
+                            row += ","
+                        }
+                        break;
+                    case 'object':
+                        let v;
+                        if (node.value === null){
+                            v = "null"
+                        } else if (Array.isArray(node.value)) {
+                            v = serializeArray(node.value, config, ns)
+                        } else {
+                            v = serializeObject(node.value, config, ns)
+                        }
+                        if (config.trim) {
+                            row = `${v}`
+                        } else {
+                            row = `${v}`
+                            row = " ".repeat(ns) + row
+                        }
+                        if (node.tag) {
+                            if (config.trim) {
+                                row += " `" + node.tag + "`"
+                            } else {
+                                row += "`" + node.tag + "`"
+                            }
+                        }
+                        if (i != entries.length - 1) {
+                            row += ","
+                        }
+                        break;
+                }
+                if (!config.trim) {
+                    row += "\n"
+                }
+                result += row
+            }, result)
+            result += " ".repeat(ns - config.basicSpace) + "]"
+            return result
+        }
+
+        const serializeObject = (source, config, ns) => {
+            let result = "{"
+            if (!config.trim) {
+                result += "\n"
+                ns += config.basicSpace
+            }
+            const entries = Object.entries(source);
+            entries.reduce((acc, item, i) => {
+                let [key, node] = item
+                let needQoutes = false
+                let row;
+                switch (typeof node.value) {
+                    case 'string':
+                        needQoutes = true
+                    case 'number':
+                    case 'boolean':
+                        let row = createRow(key, node, config.trim)
+                        if (!config.trim) {
+                            row = " ".repeat(ns) + row
+                        }
+                        if (i != entries.length - 1) {
+                            row += ","
+                        }
+                        break;
+                    case 'object':
+                        let v;
+                        if (node.value === null){
+                            v = "null"
+                        } else if (Array.isArray(node.value)) {
+                            v = serializeArray(node.value, config, ns)
+                        } else {
+                            v = serializeObject(node.value, config, ns)
+                        }
+                        if (config.trim) {
+                            row = `"${key}":${v}`
+                        } else {
+                            row = `"${key}": ${v}`
+                            row = " ".repeat(ns) + row
+                        }
+                        if (node.tag) {
+                            if (config.trim) {
+                                row += "`" + node.tag + "`"
+                            } else {
+                                row += " `" + node.tag + "`"
+                            }
+                        }
+                        if (i != entries.length - 1) {
+                            row += ","
+                        }
+                        break;
+                }
+                if (!config.trim) {
+                    row += "\n"
+                }
+                result += row
+            }, result)
+            result += " ".repeat(ns - config.basicSpace) + "}"
+            return result
+        }
+
+        const config = {
+            trim,
+            basicSpace: 4,
+        }
+
+        if (source === null) {
+            return `null`
+        } else if (Array.isArray(source)) {
+            return serializeArray(source, config, 0)
+        } else {
+            return serializeObject(source, config, 0)
         }
     }
 }

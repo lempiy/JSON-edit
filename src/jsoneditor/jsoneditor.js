@@ -91,6 +91,24 @@ export class JsonEditor {
         bindNodeToElement(this.rootNode.element, this.rootNode);
     }
 
+    destroy() {
+        // Free memory to let GC clean everything
+        this.adder.hostElement.parentNode.removeChild(this.adder.hostElement)
+        this.root.parentNode.removeChild(this.root)
+        this.mountSelector = null;
+        this.mountElement = null;
+        this.source = null;
+        this.mounted = null;
+        this.root = null;
+        this.rootNode = null;
+        this.elementsMap = null;
+        this.adder = null;
+        editNode = null;
+        editNode = null;
+        editNode = null;
+        editNode = null;
+    }
+
     attachEvents() {
         this.root.addEventListener('click', (event) => {
             if (editValue) {
