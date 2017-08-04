@@ -186,7 +186,6 @@ export class JsonEditor {
         prevInput = event.target.textContent
         switch(editNode.type) {
             case 'number': {
-                console.log(event)
                 if (!/[0-9\.\-]/g.test(event.key)) {
                     event.preventDefault()
                 } else if (event.key === '.') {
@@ -234,6 +233,12 @@ export class JsonEditor {
                     editEl.textContent = editNode.data[editNode.key];
                 }
                 break;
+            }
+            case 'null': {
+                let newType = Node._assertPrimitiveValue(editEl.textContent)
+                editNode.data[editNode.key] = newType.value;
+                editNode.type = newType.type;
+                editNode.element.setAttribute("data-type", newType.type)
             }
             case 'string':
             default:
@@ -343,6 +348,5 @@ export class JsonEditor {
         editEl = null;
         editValue = null;
         editNode = null;
-        console.log(editEl, editValue, editNode)
     }
 }

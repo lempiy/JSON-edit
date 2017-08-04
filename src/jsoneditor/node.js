@@ -47,6 +47,7 @@ export class Node {
     set type(value) {
         if (this.element) {
             this.element.setAttribute('data-type', value);
+            
         }
         this._type = value;
     }
@@ -241,6 +242,30 @@ export class Node {
         })
         
         return el;
+    }
+
+    static _assertPrimitiveValue(value) {
+        if (!isNaN(+value)) {
+            return {
+                value: +value,
+                type: "number"
+            };
+        } else if (String(value) === "true" || String(value) === "false") {
+            return {
+                value: String(value) === "true" ? true : false,
+                type: "boolean"
+            }
+        } else if (String(value) === "null") {
+            return {
+                value: null,
+                type: "null"
+            }
+        } else {
+            return {
+                value: String(value),
+                type: "string"
+            }
+        }
     }
 
     static _detectValueType(value) {

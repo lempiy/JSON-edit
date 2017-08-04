@@ -53,7 +53,7 @@ jsoneditor.loadSource([
     "age": 28,
     "eyeColor": "green",
     "name": "Madge Spencer",
-    "gender": "female",
+    "gender": null,
     "company": "OCTOCORE",
     "email": "madgespencer@octocore.com",
     "phone": "+1 (860) 509-3745",

@@ -170,7 +170,6 @@ export class Adder {
         this.currentNode.source.push(this._getCorrectPrimitive(input.value))
         this.currentNode.children.push(data)
         this.elementMap.set(newEl, data)
-        console.log(this.currentNode)
         this.currentNode.element.appendChild(newEl)
         this.hide()  
     }
@@ -222,7 +221,7 @@ export class Adder {
     }
 
     _getCorrectPrimitive(input) {
-        switch(input){
+        switch(this.currOption){
             case "string":
                 return String(input);
             case "number":
@@ -242,6 +241,7 @@ export class Adder {
             case "array":
             case "object":
                 this._applyComplex()
+                break;
         }
     }
 

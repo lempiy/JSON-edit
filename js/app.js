@@ -165,7 +165,7 @@
 	    }, {
 	        key: 'destroy',
 	        value: function destroy() {
-	            // Free memory to let GC clean everything
+	            // Free references to let GC clean everything
 	            this.adder.hostElement.parentNode.removeChild(this.adder.hostElement);
 	            this.root.parentNode.removeChild(this.root);
 	            this.mountSelector = null;
@@ -177,9 +177,9 @@
 	            this.elementsMap = null;
 	            this.adder = null;
 	            editNode = null;
-	            editNode = null;
-	            editNode = null;
-	            editNode = null;
+	            editEl = null;
+	            editValue = null;
+	            prevInput = null;
 	        }
 	    }, {
 	        key: 'attachEvents',
@@ -263,7 +263,6 @@
 	            switch (editNode.type) {
 	                case 'number':
 	                    {
-	                        console.log(event);
 	                        if (!/[0-9\.\-]/g.test(event.key)) {
 	                            event.preventDefault();
 	                        } else if (event.key === '.') {
@@ -313,6 +312,13 @@
 	                            editEl.textContent = editNode.data[editNode.key];
 	                        }
 	                        break;
+	                    }
+	                case 'null':
+	                    {
+	                        var newType = _node.Node._assertPrimitiveValue(editEl.textContent);
+	                        editNode.data[editNode.key] = newType.value;
+	                        editNode.type = newType.type;
+	                        editNode.element.setAttribute("data-type", newType.type);
 	                    }
 	                case 'string':
 	                default:
@@ -390,7 +396,6 @@
 	            editEl = null;
 	            editValue = null;
 	            editNode = null;
-	            console.log(editEl, editValue, editNode);
 	        }
 	    }], [{
 	        key: 'getValueElement',
@@ -688,6 +693,31 @@
 	            this._collapsed = value;
 	        }
 	    }], [{
+	        key: '_assertPrimitiveValue',
+	        value: function _assertPrimitiveValue(value) {
+	            if (!isNaN(+value)) {
+	                return {
+	                    value: +value,
+	                    type: "number"
+	                };
+	            } else if (String(value) === "true" || String(value) === "false") {
+	                return {
+	                    value: String(value) === "true" ? true : false,
+	                    type: "boolean"
+	                };
+	            } else if (String(value) === "null") {
+	                return {
+	                    value: null,
+	                    type: "null"
+	                };
+	            } else {
+	                return {
+	                    value: String(value),
+	                    type: "string"
+	                };
+	            }
+	        }
+	    }, {
 	        key: '_detectValueType',
 	        value: function _detectValueType(value) {
 	            var type = typeof value;
@@ -868,7 +898,6 @@
 	            this.currentNode.source.push(this._getCorrectPrimitive(input.value));
 	            this.currentNode.children.push(data);
 	            this.elementMap.set(newEl, data);
-	            console.log(this.currentNode);
 	            this.currentNode.element.appendChild(newEl);
 	            this.hide();
 	        }
@@ -926,7 +955,7 @@
 	    }, {
 	        key: "_getCorrectPrimitive",
 	        value: function _getCorrectPrimitive(input) {
-	            switch (input) {
+	            switch (this.currOption) {
 	                case "string":
 	                    return String(input);
 	                case "number":
@@ -947,6 +976,7 @@
 	                case "array":
 	                case "object":
 	                    this._applyComplex();
+	                    break;
 	            }
 	        }
 	    }, {
