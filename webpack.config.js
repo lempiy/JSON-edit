@@ -13,12 +13,12 @@ module.exports = {
 
   output: {
     path: __dirname,
-    filename: 'js/app.js'
+    filename: 'js/json-editor.js'
   },
 
   plugins: [
     // Specify the resulting CSS filename
-    new ExtractTextPlugin('css/app.css'),
+    new ExtractTextPlugin('css/json-editor.css'),
 
     // Stylelint plugin
     // new styleLintPlugin({

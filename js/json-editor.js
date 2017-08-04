@@ -1093,4 +1093,4 @@
 
 /***/ })
 /******/ ]);
-//# sourceMappingURL=app.js.map
+//# sourceMappingURL=json-editor.js.map
